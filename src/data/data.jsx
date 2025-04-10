@@ -52,7 +52,7 @@ const data = [
     image: 'https://i.pinimg.com/736x/44/c5/28/44c52867c2ae44e670e80c6a00e24909.jpg',
     bookmarkCount: 1340,
     date: '1 April 2025',
-  },
+  },  
   {
     id: '7',
     title: 'Cuci Motor Lengkap',
