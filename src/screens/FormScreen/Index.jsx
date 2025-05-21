@@ -1,28 +1,12 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert, Image } from 'react-native';
+import axios from 'axios';
 
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+const API_URL = 'https://682607c9397e48c91314b34e.mockapi.io/api/artikel';
 
-export default function FormScreen() {
-  const [data, setData] = useState([
-    {
-      id: '1',
-      title: 'Cuci Mobil Standar',
-      price: 'Rp 75.000',
-      description: 'Pembersihan eksterior menyeluruh untuk mobil.',
-      image: 'https://i.pinimg.com/736x/c0/f1/18/c0f118f50f63ff81b75074ca9640d3b7.jpg',
-      bookmarkCount: 1250,
-      date: '10 April 2025',
-    },
-    {
-      id: '2',
-      title: 'Detailing Premium',
-      price: 'Rp 350.000',
-      description: 'Pembersihan interior dan eksterior profesional.',
-      image: 'https://i.pinimg.com/736x/e6/6b/69/e66b69fe43fe26780ae09757b14cd5ee.jpg',
-      bookmarkCount: 980,
-      date: '8 April 2025',
-    },
-  ]);
+export default function FormScreen({ route, navigation }) {
+  const isEdit = route?.params?.isEdit;
+  const editData = route?.params?.data;
 
   const [formData, setFormData] = useState({
     title: '',
@@ -33,89 +17,96 @@ export default function FormScreen() {
     date: '',
   });
 
+  useEffect(() => {
+    if (isEdit && editData) {
+      setFormData(editData);
+    }
+  }, [isEdit, editData]);
+
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = () => {
-    const newId = (data.length + 1).toString(); // Membuat ID baru untuk data yang ditambahkan
-    const newData = { ...formData, id: newId, bookmarkCount: parseInt(formData.bookmarkCount) };
-    setData([...data, newData]); // Menambahkan data baru ke array data
-    console.log('Data Form Submitted:', newData);
-    setFormData({ title: '', price: '', description: '', image: '', bookmarkCount: '', date: '' }); // Reset form
+  const handleSubmit = async () => {
+    try {
+      if (isEdit) {
+        await axios.put(`${API_URL}/${formData.id}`, {
+          ...formData,
+          bookmarkCount: parseInt(formData.bookmarkCount),
+        });
+        Alert.alert('Berhasil', 'Data berhasil diperbarui!');
+      } else {
+        await axios.post(API_URL, {
+          ...formData,
+          bookmarkCount: parseInt(formData.bookmarkCount),
+        });
+        Alert.alert('Berhasil', 'Data berhasil ditambahkan!');
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Form Tambah Data</Text>
+      <Text style={styles.title}>{isEdit ? 'Edit Data' : 'Form Tambah Data'}</Text>
 
-      {/* Input untuk title */}
       <TextInput
         style={styles.input}
         placeholder="Title"
         value={formData.title}
-        onChangeText={(text) => handleInputChange('title', text)} // Mengubah nilai title
+        onChangeText={(text) => handleInputChange('title', text)}
       />
-
-      {/* Input untuk price */}
       <TextInput
         style={styles.input}
         placeholder="Price"
         value={formData.price}
-        onChangeText={(text) => handleInputChange('price', text)} // Mengubah nilai price
+        onChangeText={(text) => handleInputChange('price', text)}
       />
-
-      {/* Input untuk description */}
       <TextInput
         style={styles.input}
         placeholder="Description"
         value={formData.description}
-        onChangeText={(text) => handleInputChange('description', text)} // Mengubah nilai description
+        onChangeText={(text) => handleInputChange('description', text)}
       />
-
-      {/* Input untuk image URL */}
       <TextInput
         style={styles.input}
         placeholder="Image URL"
         value={formData.image}
-        onChangeText={(text) => handleInputChange('image', text)} // Mengubah nilai image URL
+        onChangeText={(text) => handleInputChange('image', text)}
       />
 
-      {/* Input untuk bookmarkCount */}
+      {formData.image ? (
+        <Image
+          source={{ uri: formData.image }}
+          style={styles.imagePreview}
+          resizeMode="cover"
+        />
+      ) : null}
+
       <TextInput
         style={styles.input}
         placeholder="Bookmark Count"
-        value={formData.bookmarkCount}
-        onChangeText={(text) => handleInputChange('bookmarkCount', text)} // Mengubah nilai bookmarkCount
+        value={formData.bookmarkCount.toString()}
+        onChangeText={(text) => handleInputChange('bookmarkCount', text)}
         keyboardType="numeric"
       />
-
-      {/* Input untuk date */}
       <TextInput
         style={styles.input}
         placeholder="Date"
         value={formData.date}
-        onChangeText={(text) => handleInputChange('date', text)} // Mengubah nilai date
+        onChangeText={(text) => handleInputChange('date', text)}
       />
 
-      <Button title="Submit" onPress={handleSubmit} />
-      
-      {/* Menampilkan data yang telah ditambahkan */}
-      <View style={styles.dataContainer}>
-        <Text style={styles.dataTitle}>Data yang Tersimpan:</Text>
-        {data.map((item) => (
-          <View key={item.id} style={styles.dataItem}>
-            <Text>{item.title} - {item.price}</Text>
-          </View>
-        ))}
-      </View>
+      <Button title={isEdit ? 'Update' : 'Submit'} onPress={handleSubmit} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -133,18 +124,13 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
   },
-  dataContainer: {
-    marginTop: 20,
+  imagePreview: {
     width: '100%',
-  },
-  dataTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  dataItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });
+ 
