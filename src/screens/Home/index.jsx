@@ -1,85 +1,108 @@
-import React from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import ListHorizontal from '../../components/ListHorizontal';
+import Index from '../../components/index';
+import data from '../../data/data';
+import colors from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native';
 
-export default function ItemSmall({ item, isBookmarked, onBookmarkPress }) {
+
+export default function Home({ bookmarkedItems, onToggleBookmark }) {
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+
+  const filteredData = data.filter(
+    (item) =>
+      (selectedCategory === 'Semua' || item.category === selectedCategory) &&
+      item.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.card}>
-      {item.image ? (
-        <Image
-          source={{ uri: item.image }}
-          style={styles.imageSmall}
-        />
-      ) : (
-        <Text style={styles.imageError}>Gambar tidak tersedia</Text>
-      )}
-      <View style={styles.textContainer}>
-        <View style={styles.headerRow}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <TouchableOpacity onPress={() => onBookmarkPress(item)}>
-            <Text style={[styles.starIcon, { color: isBookmarked ? '#FFD700' : '#999' }]}>★</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.cardDescription}>{item.description}</Text>
-        <TouchableOpacity onPress={() => console.log(`${item.title} Clicked!`)}>
-          <Text style={styles.readMoreText}>Read More</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.header}>YoClean</Text>
+
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Cari Kebutuhan Anda"
+        placeholderTextColor={colors.grey(0.7)}
+        value={search}
+        onChangeText={setSearch}
+      />
+
+      <ListHorizontal
+        setSelectedCategory={setSelectedCategory}
+        selectedCategory={selectedCategory}
+      />
+
+<TouchableOpacity
+  style={{
+    backgroundColor: colors.blue(1),
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+  }}
+  onPress={() => navigation.navigate('FormScreen')}
+>
+  <Text style={{ color: '#fff', fontWeight: 'bold' }}>+ Tambah Data</Text>
+</TouchableOpacity>
+
+
+      <ScrollView style={styles.list} contentContainerStyle={{ paddingBottom: 100 }}>
+        {filteredData.length > 0 ? (
+          <Index
+            data={filteredData}
+            bookmarkedItems={bookmarkedItems}
+            onToggleBookmark={onToggleBookmark}
+          />
+        ) : (
+          <Text style={styles.noResult}>Tidak ada hasil ditemukan</Text>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    marginBottom: 20,
-    padding: 10,
-    flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  container: {
+    flex: 1,
+    backgroundColor: colors.darkBlue(3),
+    padding: 15,
   },
-  imageSmall: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-  },
-  imageError: {
-    color: '#000',
-    fontSize: 14,
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.white(1),
     textAlign: 'center',
-    padding: 10,
+    marginBottom: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
-  textContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
+  searchBar: {
+    height: 45,
+    backgroundColor: colors.lightGrey(1),
+    borderRadius: 12,
+    paddingHorizontal: 15,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    flex: 1,
+    color: colors.black(1),
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: colors.blue(1),
   },
-  cardDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+  list: {
+    marginTop: 10,
   },
-  readMoreText: {
-    color: '#0066CC',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  starIcon: {
-    fontSize: 22,
-    marginLeft: 8,
+  noResult: {
+    color: colors.black(1),
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 18,
+    fontWeight: '600',
+    backgroundColor: colors.lightGrey(0.9),
+    padding: 15,
+    borderRadius: 10,
   },
 });
